@@ -64,7 +64,7 @@ const ProfilesView = () => {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="text-white">
-        <h1 className="text-2xl font-bold mb-6">Profiles</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">Profiles</h1>
         <div className="space-y-4">
           {profiles.map((profile, index) => (
             <DraggableProfile

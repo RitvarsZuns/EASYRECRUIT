@@ -69,7 +69,8 @@ const CVDocumentsView = () => {
 
   return (
     <div className="text-white">
-      <h1 className="text-2xl font-bold mb-6">CV Documents</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">CV Documents</h1>
+
 
       {/* Slider sekcija */}
       <div className="relative mb-6 flex justify-center items-center">

@@ -6,7 +6,7 @@ const FavouritesView = () => {
 
   return (
     <div className="text-white">
-      <h1 className="text-2xl font-bold mb-6">Favourites</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">Favourites</h1>
 
       <div className="space-y-4">
         {favorites.length === 0 ? (
