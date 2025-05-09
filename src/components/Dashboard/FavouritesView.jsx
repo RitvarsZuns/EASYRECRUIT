@@ -1,12 +1,22 @@
 import React from 'react';
+import { useParams } from 'react-router-dom';
 import { useFavorites } from '../../context/FavoritesContext';
+import { useVacancy } from '../../context/VacancyContext';
 
 const FavouritesView = () => {
-  const { favorites, toggleFavorite } = useFavorites();
+  const { vacancyId } = useParams();
+  const { getFavorites, toggleFavorite } = useFavorites();
+  const { vacancies } = useVacancy();
+
+  const favorites = getFavorites(vacancyId);
+  const currentVacancy = vacancies.find(v => v.id === vacancyId);
+  const vacancyName = currentVacancy?.title || 'Unknown Vacancy';
 
   return (
     <div className="text-white">
-      <h1 className="text-2xl font-bold mb-6 text-center">Favourites</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">
+        {vacancyName} - Favourites
+      </h1>
 
       <div className="space-y-4">
         {favorites.length === 0 ? (
@@ -24,7 +34,7 @@ const FavouritesView = () => {
                 </button>
                 <button
                   className="text-white text-xl hover:text-red-500"
-                  onClick={() => toggleFavorite(fav)}
+                  onClick={() => toggleFavorite(vacancyId, fav)}
                   title="Remove from favourites"
                 >
                   ✕

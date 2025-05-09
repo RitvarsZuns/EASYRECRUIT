@@ -1,7 +1,13 @@
 import React, { useRef, useState } from "react";
-import "./CVDocumentsView.css"; // Importē pielāgoto CSS scrollbar paslēpšanai
+import { useParams } from "react-router-dom";
+import { useVacancy } from "../../context/VacancyContext";
+import "./CVDocumentsView.css";
 
 const CVDocumentsView = () => {
+  const { vacancyId } = useParams();
+  const { vacancies } = useVacancy();
+  const vacancy = vacancies.find((v) => v.id === vacancyId);
+
   const [cvList, setCvList] = useState([]);
   const [selectedCV, setSelectedCV] = useState(null);
   const [prompt, setPrompt] = useState("");
@@ -49,7 +55,7 @@ const CVDocumentsView = () => {
       "application/pdf",
       "application/msword",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/vnd.oasis.opendocument.text"
+      "application/vnd.oasis.opendocument.text",
     ];
 
     if (!allowedTypes.includes(file.type)) {
@@ -60,19 +66,19 @@ const CVDocumentsView = () => {
     const newCV = {
       id: Date.now(),
       filename: file.name,
-      file: URL.createObjectURL(file)
+      file: URL.createObjectURL(file),
     };
 
     setCvList((prev) => [...prev, newCV]);
-    event.target.value = null; // reset input
+    event.target.value = null;
   };
 
   return (
     <div className="text-white">
-      <h1 className="text-2xl font-bold mb-6 text-center">CV Documents</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">
+        {vacancy?.title || vacancyId} - CV Documents
+      </h1>
 
-
-      {/* Slider sekcija */}
       <div className="relative mb-6 flex justify-center items-center">
         <div className="bg-[#1e1e2f] rounded px-12 py-4 flex items-center w-[90%] relative">
           <button
@@ -125,7 +131,6 @@ const CVDocumentsView = () => {
         </div>
       </div>
 
-      {/* Add un Remove All pogas */}
       <div className="flex justify-center space-x-4 mb-6">
         <input
           type="file"
@@ -148,7 +153,6 @@ const CVDocumentsView = () => {
         </button>
       </div>
 
-      {/* Prompt ievade + rezultāts */}
       <div className="bg-[#1e1e2f] p-4 rounded space-y-4">
         <div className="min-h-[80px]">
           <p className="text-sm">{prompt || "No prompt submitted yet."}</p>
@@ -168,7 +172,6 @@ const CVDocumentsView = () => {
         </div>
       </div>
 
-      {/* Preview Modal */}
       {previewURL && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
           <div className="bg-white w-[80%] h-[80%] p-4 rounded relative">

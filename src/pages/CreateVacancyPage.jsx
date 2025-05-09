@@ -10,8 +10,8 @@ const CreateVacancyPage = () => {
 
   const handleCreate = () => {
     if (vacancyName.trim() !== "") {
-      addVacancy(vacancyName.trim());
-      navigate("/dashboard/cv-documents");
+      const newVacancy = addVacancy(vacancyName.trim());
+      navigate(`/dashboard/${newVacancy.id}/cv-documents`);
     }
   };
 

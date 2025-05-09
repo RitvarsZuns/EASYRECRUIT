@@ -10,18 +10,19 @@ export const VacancyProvider = ({ children }) => {
 
   const addVacancy = (name) => {
     const slug = name.toLowerCase().replace(/\s+/g, '-');
-    const id = Date.now().toString(); // vai UUID, ja nepieciešams
+    const id = Date.now().toString();
     const newVacancy = { id, title: name, slug };
     setVacancies((prev) => [...prev, newVacancy]);
     setActiveVacancy(newVacancy);
-    navigate('/dashboard/cv-documents');
+    navigate(`/dashboard/${id}/cv-documents`);
+    return newVacancy;
   };
 
   const deleteVacancy = (id) => {
-    setVacancies((prev) => prev.filter(v => v.id !== id));
+    setVacancies((prev) => prev.filter((v) => v.id !== id));
     if (activeVacancy?.id === id) {
       setActiveVacancy(null);
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   };
 

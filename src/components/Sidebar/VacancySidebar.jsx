@@ -1,16 +1,29 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useVacancy } from "../../context/VacancyContext";
-import { Plus } from "lucide-react";
+import { useFavorites } from "../../context/FavoritesContext";
+import { Plus, Search } from "lucide-react";
 import hamburgerIcon from "../../assets/hamburger.png";
+
+const Badge = ({ count }) => {
+  return (
+    count > 0 && (
+      <span className="ml-2 bg-purple-700 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+        {count}
+      </span>
+    )
+  );
+};
 
 const VacancySidebar = ({
   closeSidebar,
   onShowCreateModal,
   onConfirmDelete,
+  onSearch,
 }) => {
   const location = useLocation();
   const { vacancies } = useVacancy();
+  const { getFavorites } = useFavorites();
   const [openSections, setOpenSections] = useState({});
 
   useEffect(() => {
@@ -29,23 +42,28 @@ const VacancySidebar = ({
 
   return (
     <div className="w-64 bg-[#1e1e2f] text-white p-4 flex flex-col h-full">
-      {/* Augša: ikonas */}
       <div className="flex justify-between items-center mb-6">
         <button onClick={closeSidebar} title="Close sidebar">
           <img src={hamburgerIcon} alt="Close Sidebar" className="w-6 h-6" />
         </button>
-        <button onClick={onShowCreateModal} title="Add vacancy">
-          <Plus className="text-white hover:text-purple-400 w-5 h-6" />
-        </button>
+        <div className="flex items-center">
+          <button onClick={onSearch} title="Search" className="ml-2">
+            <Search className="text-white hover:text-purple-400 w-5 h-6" />
+          </button>
+          <button onClick={onShowCreateModal} title="Add vacancy">
+            <Plus className="text-white hover:text-purple-400 w-6 h-6" />
+          </button>
+        </div>
       </div>
 
-      {/* Vakances ritināmais bloks */}
       <div className="flex-1 overflow-y-auto pr-3 scrollbar-custom">
         {vacancies
           .slice()
           .reverse()
           .map((vacancy) => {
             const isOpen = openSections[vacancy.id];
+            const favCount = getFavorites(vacancy.id).length;
+            const profileCount = 3; // Assuming static mock profiles
             return (
               <div key={vacancy.id} className="mb-4">
                 <div className="flex justify-between items-center">
@@ -63,6 +81,7 @@ const VacancySidebar = ({
                     ✕
                   </button>
                 </div>
+
                 <div
                   className={`overflow-hidden transition-all duration-300 ease-in-out ${
                     isOpen ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
@@ -71,27 +90,29 @@ const VacancySidebar = ({
                   <ul className="pl-4 space-y-1 pt-1">
                     <li>
                       <Link
-                        to="/dashboard/cv-documents"
+                        to={`/dashboard/${vacancy.id}/cv-documents`}
                         className="hover:underline"
                       >
                         CV documents
                       </Link>
                     </li>
-                    <li>
+                    <li className="flex items-center">
                       <Link
-                        to="/dashboard/profiles"
+                        to={`/dashboard/${vacancy.id}/profiles`}
                         className="hover:underline"
                       >
                         Profiles
                       </Link>
+                      <Badge count={profileCount} />
                     </li>
-                    <li>
+                    <li className="flex items-center">
                       <Link
-                        to="/dashboard/favourites"
+                        to={`/dashboard/${vacancy.id}/favourites`}
                         className="hover:underline"
                       >
                         Favourites
                       </Link>
+                      <Badge count={favCount} />
                     </li>
                   </ul>
                 </div>
@@ -100,7 +121,6 @@ const VacancySidebar = ({
           })}
       </div>
 
-      {/* Logo apakšā */}
       <div className="pt-4">
         <img
           src={require("../../assets/logo.png")}

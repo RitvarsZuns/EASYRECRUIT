@@ -10,12 +10,13 @@ const MainLayout = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newVacancyName, setNewVacancyName] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const { addVacancy, deleteVacancy, activeVacancy } = useVacancy();
+  const { addVacancy, deleteVacancy, vacancies } = useVacancy();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Hamburger parādīšana ar aizkavi pēc aizvēršanas
   useEffect(() => {
     let timer;
     if (!isSidebarOpen) {
@@ -41,9 +42,18 @@ const MainLayout = () => {
     if (isCurrent) navigate("/dashboard");
   };
 
+  const handleSearchNavigate = (vacancyId) => {
+    setSearchQuery("");
+    setShowSearchModal(false);
+    navigate(`/dashboard/${vacancyId}/cv-documents`);
+  };
+
+  const filteredVacancies = vacancies.filter((v) =>
+    v.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="flex min-h-screen bg-black text-white relative">
-      {/* Sidebar */}
       <div
         className={`fixed z-40 top-0 left-0 h-full transition-transform duration-300 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -53,10 +63,10 @@ const MainLayout = () => {
           closeSidebar={() => setIsSidebarOpen(false)}
           onShowCreateModal={() => setShowCreateModal(true)}
           onConfirmDelete={(id) => setDeleteTarget(id)}
+          onSearch={() => setShowSearchModal(true)}
         />
       </div>
 
-      {/* Hamburger */}
       {showHamburger && (
         <button
           onClick={() => setIsSidebarOpen(true)}
@@ -66,12 +76,10 @@ const MainLayout = () => {
         </button>
       )}
 
-      {/* Main content */}
       <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "ml-64" : "ml-0"} p-4`}>
         <Outlet />
       </main>
 
-      {/* Modāļi ārpus Sidebar */}
       {deleteTarget && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="bg-[#2c2c3a] p-6 rounded shadow-lg w-[300px]">
@@ -98,6 +106,47 @@ const MainLayout = () => {
             <div className="flex justify-end space-x-3">
               <button onClick={() => setShowCreateModal(false)} className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-1 rounded">Cancel</button>
               <button onClick={handleCreate} className="bg-purple-800 hover:bg-purple-700 text-white px-4 py-1 rounded">Create</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSearchModal && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center">
+          <div className="bg-[#1e1e2f] p-6 rounded-xl w-[90%] max-w-md">
+            <h2 className="text-lg font-semibold mb-4">Search vacancy</h2>
+            <input
+              type="text"
+              placeholder="Start typing a vacancy name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full p-2 mb-4 rounded bg-gray-800 text-white"
+            />
+            <div className="max-h-60 overflow-y-auto space-y-2">
+              {filteredVacancies.length === 0 ? (
+                <p className="text-gray-400">No matching vacancies.</p>
+              ) : (
+                filteredVacancies.map((v) => (
+                  <button
+                    key={v.id}
+                    className="block w-full text-left text-purple-400 hover:underline"
+                    onClick={() => handleSearchNavigate(v.id)}
+                  >
+                    {v.title}
+                  </button>
+                ))
+              )}
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => {
+                  setShowSearchModal(false);
+                  setSearchQuery("");
+                }}
+                className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-500 text-white"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

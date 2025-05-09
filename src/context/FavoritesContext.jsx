@@ -1,25 +1,31 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 const FavoritesContext = createContext();
 
 export const useFavorites = () => useContext(FavoritesContext);
 
 export const FavoritesProvider = ({ children }) => {
-  const [favorites, setFavorites] = useState([]);
+  const [favoritesByVacancy, setFavoritesByVacancy] = useState({});
 
-  const toggleFavorite = (profile) => {
-    const exists = favorites.find((fav) => fav.id === profile.id);
-    if (exists) {
-      setFavorites(favorites.filter((fav) => fav.id !== profile.id));
-    } else {
-      setFavorites([...favorites, profile]);
-    }
+  const toggleFavorite = (vacancyId, profile) => {
+    setFavoritesByVacancy((prev) => {
+      const currentFavs = prev[vacancyId] || [];
+      const exists = currentFavs.find((p) => p.id === profile.id);
+      const updated = exists
+        ? currentFavs.filter((p) => p.id !== profile.id)
+        : [...currentFavs, profile];
+      return { ...prev, [vacancyId]: updated };
+    });
   };
 
-  const isFavorite = (id) => favorites.some((fav) => fav.id === id);
+  const isFavorite = (vacancyId, profileId) => {
+    return (favoritesByVacancy[vacancyId] || []).some((p) => p.id === profileId);
+  };
+
+  const getFavorites = (vacancyId) => favoritesByVacancy[vacancyId] || [];
 
   return (
-    <FavoritesContext.Provider value={{ favorites, toggleFavorite, isFavorite }}>
+    <FavoritesContext.Provider value={{ toggleFavorite, isFavorite, getFavorites }}>
       {children}
     </FavoritesContext.Provider>
   );

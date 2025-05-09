@@ -19,9 +19,9 @@ function App() {
             <Route path="/register" element={<RegistrationForm />} />
             <Route path="/dashboard" element={<MainLayout />}>
               <Route index element={<CreateVacancyPage />} />
-              <Route path="cv-documents" element={<CVDocumentsView />} />
-              <Route path="profiles" element={<ProfilesView />} />
-              <Route path="favourites" element={<FavouritesView />} />
+              <Route path=":vacancyId/cv-documents" element={<CVDocumentsView />} />
+              <Route path=":vacancyId/profiles" element={<ProfilesView />} />
+              <Route path=":vacancyId/favourites" element={<FavouritesView />} />
             </Route>
           </Routes>
         </VacancyProvider>
