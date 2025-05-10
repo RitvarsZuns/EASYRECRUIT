@@ -5,6 +5,7 @@ const VacancyContext = createContext();
 
 export const VacancyProvider = ({ children }) => {
   const [vacancies, setVacancies] = useState([]);
+  const [archivedVacancies, setArchivedVacancies] = useState([]);
   const [activeVacancy, setActiveVacancy] = useState(null);
   const navigate = useNavigate();
 
@@ -20,15 +21,55 @@ export const VacancyProvider = ({ children }) => {
 
   const deleteVacancy = (id) => {
     setVacancies((prev) => prev.filter((v) => v.id !== id));
+    setArchivedVacancies((prev) => prev.filter((v) => v.id !== id));
     if (activeVacancy?.id === id) {
       setActiveVacancy(null);
       navigate("/dashboard");
     }
   };
 
+  const renameVacancy = (id, newTitle) => {
+    setVacancies((prev) =>
+      prev.map((v) => (v.id === id ? { ...v, title: newTitle } : v))
+    );
+    setArchivedVacancies((prev) =>
+      prev.map((v) => (v.id === id ? { ...v, title: newTitle } : v))
+    );
+  };
+
+  const archiveVacancy = (id) => {
+    const toArchive = vacancies.find((v) => v.id === id);
+    if (toArchive) {
+      setArchivedVacancies((prev) => [...prev, toArchive]);
+      setVacancies((prev) => prev.filter((v) => v.id !== id));
+      if (activeVacancy?.id === id) {
+        setActiveVacancy(null);
+        navigate("/dashboard");
+      }
+    }
+  };
+
+  const unarchiveVacancy = (id) => {
+    const toRestore = archivedVacancies.find((v) => v.id === id);
+    if (toRestore) {
+      setVacancies((prev) => [...prev, toRestore]);
+      setArchivedVacancies((prev) => prev.filter((v) => v.id !== id));
+    }
+  };
+
   return (
     <VacancyContext.Provider
-      value={{ vacancies, addVacancy, deleteVacancy, activeVacancy, setActiveVacancy }}
+      value={{
+        vacancies,
+        archivedVacancies,
+        activeVacancy,
+        addVacancy,
+        deleteVacancy,
+        renameVacancy,
+        archiveVacancy,
+        unarchiveVacancy,
+        setActiveVacancy
+      }}
     >
       {children}
     </VacancyContext.Provider>
