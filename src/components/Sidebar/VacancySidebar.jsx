@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useVacancy } from "../../context/VacancyContext";
 import { useFavorites } from "../../context/FavoritesContext";
 import { Plus, Search } from "lucide-react";
@@ -25,6 +25,7 @@ const VacancySidebar = ({
   const { vacancies } = useVacancy();
   const { getFavorites } = useFavorites();
   const [openSections, setOpenSections] = useState({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     const match = vacancies.find((v) => location.pathname.includes(v.id));
@@ -119,6 +120,24 @@ const VacancySidebar = ({
               </div>
             );
           })}
+      </div>
+
+      <div className="flex flex-col items-center gap-2">
+        <button
+          className="hover:underline"
+          onClick={() => navigate('/dashboard/settings')}>
+          Profila uzstādijumi
+        </button>
+        <button
+          className="hover:underline"
+          onClick={() => navigate('/dashboard/privacy')}>
+          Privātuma politika
+        </button>
+        <button
+          className="hover:underline"
+          onClick={() => navigate('/dashboard/contacts')}>
+          Kontakti
+        </button>
       </div>
 
       <div className="pt-4">

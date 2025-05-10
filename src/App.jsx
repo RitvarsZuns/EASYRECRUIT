@@ -5,6 +5,7 @@ import MainLayout from "./components/Layout/MainLayout";
 import CVDocumentsView from "./components/Dashboard/CVDocumentsView";
 import ProfilesView from "./components/Dashboard/ProfilesView";
 import FavouritesView from "./components/Dashboard/FavouritesView";
+import SettingsView from "./components/Dashboard/SettingsView";
 import { FavoritesProvider } from "./context/FavoritesContext";
 import CreateVacancyPage from "./pages/CreateVacancyPage";
 import { VacancyProvider } from "./context/VacancyContext";
@@ -22,6 +23,8 @@ function App() {
               <Route path=":vacancyId/cv-documents" element={<CVDocumentsView />} />
               <Route path=":vacancyId/profiles" element={<ProfilesView />} />
               <Route path=":vacancyId/favourites" element={<FavouritesView />} />
+
+              <Route path="settings" element={<SettingsView />} />
             </Route>
           </Routes>
         </VacancyProvider>

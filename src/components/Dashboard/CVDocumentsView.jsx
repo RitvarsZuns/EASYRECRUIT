@@ -48,9 +48,6 @@ const CVDocumentsView = () => {
   };
 
   const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
     const allowedTypes = [
       "application/pdf",
       "application/msword",
@@ -58,18 +55,15 @@ const CVDocumentsView = () => {
       "application/vnd.oasis.opendocument.text",
     ];
 
-    if (!allowedTypes.includes(file.type)) {
-      alert("Invalid file type. Only PDF, DOC, DOCX, and ODT are allowed.");
-      return;
-    }
+    const addedCVs = Array.from(event.target.files)
+      .filter(file => allowedTypes.includes(file.type))
+      .map(file => ({
+        id: Date.now(),
+        filename: file.name,
+        file: URL.createObjectURL(file),
+      }));
 
-    const newCV = {
-      id: Date.now(),
-      filename: file.name,
-      file: URL.createObjectURL(file),
-    };
-
-    setCvList((prev) => [...prev, newCV]);
+    setCvList((prev) => [...prev, ...addedCVs]);
     event.target.value = null;
   };
 
@@ -137,6 +131,7 @@ const CVDocumentsView = () => {
           accept=".pdf,.doc,.docx,.odt"
           onChange={handleFileChange}
           ref={fileInputRef}
+          multiple
           hidden
         />
         <button
