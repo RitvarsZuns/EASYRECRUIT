@@ -80,7 +80,7 @@ const CVDocumentsView = () => {
       </h1>
 
       <div className="relative mb-6 flex justify-center items-center">
-        <div className="bg-[#1e1e2f] rounded px-12 py-4 flex items-center w-[90%] relative">
+        <div className="relative w-full max-w-[1550px] bg-[#1e1e2f] rounded px-12 py-4">
           <button
             onClick={scrollLeft}
             className="absolute left-[-40px] top-1/2 -translate-y-1/2 z-20 text-white text-3xl hover:text-purple-400 bg-transparent border-none shadow-none outline-none"

@@ -533,6 +533,44 @@ const MainLayout = () => {
           </div>
         </div>
       )}
+
+      {showSearchModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-[#1e1e2f] p-6 rounded shadow-lg w-[400px]">
+            <h2 className="text-lg font-semibold mb-4">Search vacancies</h2>
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full p-2 mb-4 rounded bg-[#222b3c] text-white outline-none"
+            />
+            <div className="space-y-2 max-h-[200px] overflow-y-auto">
+              {vacancies
+                .filter((v) =>
+                  v.title.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                .map((v) => (
+                  <div
+                    key={v.id}
+                    onClick={() => handleSearchNavigate(v.id)}
+                    className="p-2 bg-[#2c2c3a] rounded cursor-pointer hover:bg-purple-800"
+                  >
+                    {v.title}
+                  </div>
+                ))}
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setShowSearchModal(false)}
+                className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-1 rounded"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
