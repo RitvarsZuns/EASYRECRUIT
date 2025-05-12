@@ -6,6 +6,7 @@
 .pnp.js
 
 # testing
+__pycache__
 /coverage
 
 # production
@@ -13,6 +14,7 @@
 
 # misc
 .DS_Store
+.env
 .env.local
 .env.development.local
 .env.test.local
