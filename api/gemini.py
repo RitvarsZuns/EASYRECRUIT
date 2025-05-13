@@ -8,60 +8,84 @@ import os
 API_KEY = os.getenv('GEMINI_API_KEY')
 URL = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={API_KEY}'
 
-headers = {
-    'Content-Type': 'application/json'
-}
 
-def cv_extraction_prompt(cv_text: str, expectations: str) -> str:
-    """Prompt for CV extraction"""
-    return f"""
+
+def extract_cv_text(cv_text: str, maxtries = 10) -> str:
+    prompt = f"""
     You are a CV extraction AI. Your job is to extract the following information from the CV:
-    - fullName
-    - standsOutWith (based on the recruiter's expectations)
+    - full_name
     - experience
     - education
 
-    Recruiter's expectations: {expectations}
+    If the provided text is not a CV, return "Not a CV" for all required fields.
 
     Full CV text:
     {cv_text}
     """
 
-def extract_cv_text_info(prompt: str, expectations: str, temp = 0.0, maxtries = 10) -> str:
-    """Get a response from Gemini API (Gemini 2.0 Flash)
-    Args:
-        prompt (str): The prompt to send to the API.
-        expectations (str): The expectations for the candidate.
-        temp (float): The temperature for the response. Default is 0.0.
-        tries (int): The number of tries to get a response. Default is 10.
-    Returns:
-        str: The response from the API.
+    generationCofig = {
+        "temperature": 0.0,
+        "responseMimeType": "application/json",
+        "responseSchema": {
+            "type": "ARRAY",
+            "items": {
+                "type": "OBJECT",
+                "properties": {
+                    "full_name": { "type": "STRING" },
+                    "experience": { "type": "STRING" },
+                    "education": { "type": "STRING" }
+                },
+                "propertyOrdering": ["full_name", "experience", "education"]
+            }
+        }
+    }
+
+    return get_response(prompt, generationCofig, maxtries)
+
+
+def get_cv_rankings(cvs_json_str: str, expectations: str, maxtries = 10) -> str:
+    prompt = f"""
+    You are a CV ranking AI. Your job is to rank the given CVs based on the recruiter's expectations.
+    The lower the ranking, the better the CV matches the expectations.
+    The stands_out_with field must be filled with a short text that describes what makes the CV stand out, based on recruiter's expectations.
+
+    Recruiter's expectations: {expectations}
+
+    CVs JSON:
+    {cvs_json_str}
     """
+    generationCofig = {
+        "temperature": 0.0,
+        "responseMimeType": "application/json",
+        "responseSchema": {
+            "type": "ARRAY",
+            "items": {
+                "type": "OBJECT",
+                "properties": {
+                    "full_name": { "type": "STRING" },
+                    "experience": { "type": "STRING" },
+                    "education": { "type": "STRING" },
+                    "stands_out_with": { "type": "STRING" },
+                    "ranking": { "type": "INTEGER" }
+                },
+                "propertyOrdering": ["full_name", "experience", "education", "stands_out_with", "ranking"]
+            }
+        }
+    }
+
+    return get_response(prompt, generationCofig, maxtries)
+
+
+def get_response(prompt: str, generationCofig: dict = {"temperature":0.2}, maxtries = 10) -> str:
     data = {
         "contents": [
             {
                 "parts": [
-                    {"text": cv_extraction_prompt(prompt, expectations)}
+                    {"text": prompt}
                 ]
             }
         ],
-        "generationConfig": {
-            "temperature": temp,
-            "responseMimeType": "application/json",
-            "responseSchema": {
-                "type": "ARRAY",
-                "items": {
-                    "type": "OBJECT",
-                    "properties": {
-                        "fullName": { "type": "STRING" },
-                        "standsOutWith": { "type": "STRING" },
-                        "experience": { "type": "STRING" },
-                        "education": { "type": "STRING" }
-                    },
-                    "propertyOrdering": ["fullName", "standsOutWith", "experience", "education"]
-                }
-            }
-        },
+        "generationConfig": generationCofig,
         "safetySettings": [
             {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "OFF"},
             {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "OFF"},
@@ -74,7 +98,7 @@ def extract_cv_text_info(prompt: str, expectations: str, temp = 0.0, maxtries = 
     tries = 0
 
     while True:
-        response = requests.post(URL, headers=headers, json=data)
+        response = requests.post(URL, headers={'Content-Type': 'application/json'}, json=data)
 
         if response.status_code == 200:
             response_text = response.json()['candidates'][0]['content']['parts'][0]['text']
