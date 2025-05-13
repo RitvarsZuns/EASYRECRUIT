@@ -14,6 +14,7 @@ const CVDocumentsView = () => {
   const [previewURL, setPreviewURL] = useState(null);
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
+  const { setProfilesForVacancy } = useVacancy();
 
   const smoothScroll = (direction = "right") => {
     const container = scrollRef.current;
@@ -73,6 +74,53 @@ const CVDocumentsView = () => {
     event.target.value = null;
   };
 
+  const handleGenerate = async () => {
+    const generatedProfiles = await Promise.all(
+      cvList.map(async (cv) => {
+        const formData = new FormData();
+        formData.append(
+          "file",
+          await fetch(cv.file).then((r) => r.blob()),
+          cv.filename
+        );
+        formData.append("expectations", prompt);
+
+        try {
+          const res = await fetch(
+            "http://127.0.0.1:8000/process_cv?expectations=" +
+              encodeURIComponent(prompt),
+            {
+              method: "POST",
+              body: formData,
+            }
+          );
+
+          const data = await res.json();
+
+          return {
+            id: Date.now() + Math.random(),
+            name: data.full_name || cv.filename,
+            stands_out_with: data.stands_out_with,
+            experience: data.experience,
+            education: data.education,
+          };
+        } catch (error) {
+          console.error("Gemini error", error);
+          return {
+            id: Date.now() + Math.random(),
+            name: cv.filename,
+            stands_out_with: "n/a",
+            experience: "n/a",
+            education: "n/a",
+          };
+        }
+      })
+    );
+
+    setProfilesForVacancy(vacancyId, generatedProfiles);
+    alert("Profili veiksmīgi izveidoti!");
+  };
+
   return (
     <div className="text-white">
       <h1 className="text-2xl font-bold mb-6 text-center">
@@ -85,7 +133,11 @@ const CVDocumentsView = () => {
             onClick={scrollLeft}
             className="absolute left-[-40px] top-1/2 -translate-y-1/2 z-20 text-white text-3xl hover:text-purple-400 bg-transparent border-none shadow-none outline-none"
           >
-            <img src="/left-arrow.png" alt="Scroll left" className="w-10 h-10" />
+            <img
+              src="/left-arrow.png"
+              alt="Scroll left"
+              className="w-10 h-10"
+            />
           </button>
 
           <div
@@ -93,10 +145,15 @@ const CVDocumentsView = () => {
             className="flex items-center space-x-4 overflow-x-auto hide-scrollbar w-full mx-auto"
           >
             {cvList.length === 0 ? (
-              <div className="w-full text-center text-gray-400">No CVs to show</div>
+              <div className="w-full text-center text-gray-400">
+                No CVs to show
+              </div>
             ) : (
               cvList.map((cv) => (
-                <div key={cv.id} className="relative flex flex-col items-center space-y-2">
+                <div
+                  key={cv.id}
+                  className="relative flex flex-col items-center space-y-2"
+                >
                   <button
                     onClick={() => removeCV(cv.id)}
                     className="absolute -top-0 -right-0 bg-white text-black rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-gray-300 z-30"
@@ -111,7 +168,11 @@ const CVDocumentsView = () => {
                       selectedCV?.id === cv.id ? "bg-purple-700" : "bg-gray-800"
                     } hover:bg-purple-600`}
                   >
-                    <img src="/pdf-logo.png" alt="PDF preview" className="w-15 h-15" />
+                    <img
+                      src="/pdf-logo.png"
+                      alt="PDF preview"
+                      className="w-15 h-15"
+                    />
                   </div>
 
                   <span className="text-xs text-center max-w-[80px] truncate">
@@ -126,7 +187,11 @@ const CVDocumentsView = () => {
             onClick={scrollRight}
             className="absolute right-[-40px] top-1/2 -translate-y-1/2 z-20 text-white text-3xl hover:text-purple-400 bg-transparent border-none shadow-none outline-none"
           >
-            <img src="/right-arrow.png" alt="Scroll right" className="w-10 h-10" />
+            <img
+              src="/right-arrow.png"
+              alt="Scroll right"
+              className="w-10 h-10"
+            />
           </button>
         </div>
       </div>
@@ -166,7 +231,10 @@ const CVDocumentsView = () => {
             onChange={(e) => setPrompt(e.target.value)}
             className="flex-1 bg-gray-800 text-white p-2 rounded mr-4"
           />
-          <button className="bg-purple-800 hover:bg-purple-700 text-white px-4 py-2 rounded">
+          <button
+            onClick={handleGenerate}
+            className="bg-purple-800 hover:bg-purple-700 text-white px-4 py-2 rounded"
+          >
             Generate
           </button>
         </div>

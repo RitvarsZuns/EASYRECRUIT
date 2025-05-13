@@ -1,19 +1,25 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useFavorites } from '../../context/FavoritesContext';
-import { useVacancy } from '../../context/VacancyContext';
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+import React, { useState } from "react";
+import { useParams } from "react-router-dom";
+import { useFavorites } from "../../context/FavoritesContext";
+import { useVacancy } from "../../context/VacancyContext";
+import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 const mockProfiles = [
-  { id: 1, name: 'Peteris Sirmais' },
-  { id: 2, name: 'Janis Jaunais' },
-  { id: 3, name: 'Hanna Vanna' },
+  { id: 1, name: "Peteris Sirmais" },
+  { id: 2, name: "Janis Jaunais" },
+  { id: 3, name: "Hanna Vanna" },
 ];
 
-const type = 'PROFILE';
+const type = "PROFILE";
 
-const DraggableProfile = ({ profile, index, moveProfile, vacancyId, onPreview }) => {
+const DraggableProfile = ({
+  profile,
+  index,
+  moveProfile,
+  vacancyId,
+  onPreview,
+}) => {
   const { toggleFavorite, isFavorite } = useFavorites();
   const [, ref] = useDrag({ type, item: { index } });
   const [, drop] = useDrop({
@@ -27,7 +33,10 @@ const DraggableProfile = ({ profile, index, moveProfile, vacancyId, onPreview })
   });
 
   return (
-    <div ref={(node) => ref(drop(node))} className="bg-[#1e1e2f] p-4 rounded flex items-center justify-between cursor-move">
+    <div
+      ref={(node) => ref(drop(node))}
+      className="bg-[#1e1e2f] p-4 rounded flex items-center justify-between cursor-move"
+    >
       <div className="flex items-center space-x-4">
         <span className="text-gray-400 w-4">{index + 1}.</span>
         <span>{profile.name}</span>
@@ -41,7 +50,11 @@ const DraggableProfile = ({ profile, index, moveProfile, vacancyId, onPreview })
         </button>
         <button
           onClick={() => toggleFavorite(vacancyId, profile)}
-          className={`text-xl transition-colors ${isFavorite(vacancyId, profile.id) ? 'text-yellow-400' : 'text-white opacity-30'}`}
+          className={`text-xl transition-colors ${
+            isFavorite(vacancyId, profile.id)
+              ? "text-yellow-400"
+              : "text-white opacity-30"
+          }`}
           title="Toggle favorite"
         >
           ★
@@ -56,7 +69,9 @@ const ProfilesView = () => {
   const { vacancies } = useVacancy();
   const vacancy = vacancies.find((v) => v.id === vacancyId);
   const vacancyTitle = vacancy?.title || vacancyId;
-  const [profiles, setProfiles] = useState(mockProfiles);
+  const { getProfilesForVacancy } = useVacancy();
+  const [profiles, setProfiles] = useState(getProfilesForVacancy(vacancyId));
+
   const [previewProfile, setPreviewProfile] = useState(null);
 
   const moveProfile = (from, to) => {
@@ -69,7 +84,9 @@ const ProfilesView = () => {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="text-white">
-        <h1 className="text-2xl font-bold mb-6 text-center">{vacancyTitle} - Profiles</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center">
+          {vacancyTitle} - Profiles
+        </h1>
         <div className="space-y-4">
           {profiles.map((profile, index) => (
             <DraggableProfile
@@ -100,12 +117,16 @@ const ProfilesView = () => {
               <p className="mt-2 font-medium">{previewProfile.name}</p>
             </div>
             <div>
-              <h3 className="font-semibold underline text-lg mb-1">Stands out with:</h3>
-              <p className="text-sm mb-3">Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info</p>
+              <h3 className="font-semibold underline text-lg mb-1">
+                Stands out with:
+              </h3>
+              <p className="text-sm mb-3">{previewProfile.stands_out_with}</p>
               <h3 className="font-semibold text-lg mb-1">Experience</h3>
-              <p className="text-sm mb-3">Info Info Info Info Info Info Info Info Info Info</p>
-              <h3 className="font-semibold underline text-lg mb-1">Education:</h3>
-              <p className="text-sm">Info Info Info</p>
+              <p className="text-sm mb-3">{previewProfile.experience}</p>
+              <h3 className="font-semibold underline text-lg mb-1">
+                Education:
+              </h3>
+              <p className="text-sm">{previewProfile.education}</p>
             </div>
           </div>
         </div>

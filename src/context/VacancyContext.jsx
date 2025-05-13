@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const VacancyContext = createContext();
 
@@ -8,9 +8,10 @@ export const VacancyProvider = ({ children }) => {
   const [archivedVacancies, setArchivedVacancies] = useState([]);
   const [activeVacancy, setActiveVacancy] = useState(null);
   const navigate = useNavigate();
+  const [cvResultsByVacancy, setCvResultsByVacancy] = useState({});
 
   const addVacancy = (name) => {
-    const slug = name.toLowerCase().replace(/\s+/g, '-');
+    const slug = name.toLowerCase().replace(/\s+/g, "-");
     const id = Date.now().toString();
     const newVacancy = { id, title: name, slug };
     setVacancies((prev) => [...prev, newVacancy]);
@@ -57,6 +58,17 @@ export const VacancyProvider = ({ children }) => {
     }
   };
 
+  const setProfilesForVacancy = (vacancyId, profiles) => {
+    setCvResultsByVacancy((prev) => ({
+      ...prev,
+      [vacancyId]: profiles,
+    }));
+  };
+
+  const getProfilesForVacancy = (vacancyId) => {
+    return cvResultsByVacancy[vacancyId] || [];
+  };
+
   return (
     <VacancyContext.Provider
       value={{
@@ -68,7 +80,10 @@ export const VacancyProvider = ({ children }) => {
         renameVacancy,
         archiveVacancy,
         unarchiveVacancy,
-        setActiveVacancy
+        setActiveVacancy,
+        cvResultsByVacancy,
+        setProfilesForVacancy,
+        getProfilesForVacancy,
       }}
     >
       {children}
