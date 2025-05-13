@@ -1,5 +1,6 @@
 import json
 
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import Response
 from dotenv import load_dotenv
@@ -8,6 +9,14 @@ from api.text_extractor import get_text_from_file
 from api.gemini import extract_cv_text_info
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 load_dotenv()
 
 @app.post("/process_cv")
