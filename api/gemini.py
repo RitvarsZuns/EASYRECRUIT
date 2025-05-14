@@ -67,7 +67,7 @@ def get_cv_rankings(cvs_json_str: str, expectations: str, maxtries = 10) -> str:
     CVs JSON:
     {cvs_json_str}
     """
-    print(cvs_json_str)
+
     generationCofig = {
         "temperature": 0.0,
         "responseMimeType": "application/json",
@@ -118,7 +118,6 @@ def get_response(prompt: str, generationCofig: dict = {"temperature":0.2}, maxtr
         else:
             if response.status_code == 429 and tries < maxtries:
                 tries += 1
-                print("Gemini rate limit exceeded - retrying in 20 seconds")
                 time.sleep(20)
             else:
                 raise Exception(f"Tried getting Gemini API response for {tries} tries. Gemini API error {response.status_code}: {response.text}")
