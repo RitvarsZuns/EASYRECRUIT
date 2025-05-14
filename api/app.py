@@ -27,6 +27,10 @@ class CV:
     full_name: str
     experience: str
     education: str
+    phone_number: str
+    email: str
+    location: str
+    about_me: str
     stands_out_with: str = "n/a"
     ranking: int = 0
 
@@ -76,6 +80,10 @@ async def process_cv_document(file: UploadFile, expectations: str) -> CV:
 
     return CV(
             full_name = extracted_content_json.get("full_name", "n/a"),
+            phone_number = extracted_content_json.get("phone_number", "n/a"),
+            email = extracted_content_json.get("email", "n/a"),
+            location = extracted_content_json.get("location", "n/a"),
+            about_me = extracted_content_json.get("about_me", "n/a"),
             experience = extracted_content_json.get("experience", "n/a"),
             education = extracted_content_json.get("education", "n/a")
         )

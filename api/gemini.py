@@ -14,6 +14,10 @@ def extract_cv_text(cv_text: str, maxtries = 10) -> str:
     prompt = f"""
     You are a CV extraction AI. Your job is to extract the following information from the CV:
     - full_name
+    - phone_number
+    - email
+    - location
+    - about_me
     - experience
     - education
 
@@ -32,10 +36,14 @@ def extract_cv_text(cv_text: str, maxtries = 10) -> str:
                 "type": "OBJECT",
                 "properties": {
                     "full_name": { "type": "STRING" },
+                    "phone_number": { "type": "STRING" },
+                    "email": { "type": "STRING" },
+                    "location": { "type": "STRING" },
+                    "about_me": { "type": "STRING" },
                     "experience": { "type": "STRING" },
                     "education": { "type": "STRING" }
                 },
-                "propertyOrdering": ["full_name", "experience", "education"]
+                "propertyOrdering": ["full_name", "phone_number", "email", "location", "about_me", "experience", "education"]
             }
         }
     }
@@ -48,12 +56,23 @@ def get_cv_rankings(cvs_json_str: str, expectations: str, maxtries = 10) -> str:
     You are a CV ranking AI. Your job is to rank the given CVs based on the recruiter's expectations.
     The lower the ranking, the better the CV matches the expectations.
     The stands_out_with field must be filled with a short text that describes what makes the CV stand out, based on recruiter's expectations.
+    You must return:
+    - full_name
+    - phone_number
+    - email
+    - location
+    - about_me
+    - experience
+    - education
+    - stands_out_with
+    - ranking
 
     Recruiter's expectations: {expectations}
 
     CVs JSON:
     {cvs_json_str}
     """
+    print(cvs_json_str)
     generationCofig = {
         "temperature": 0.0,
         "responseMimeType": "application/json",
@@ -63,12 +82,16 @@ def get_cv_rankings(cvs_json_str: str, expectations: str, maxtries = 10) -> str:
                 "type": "OBJECT",
                 "properties": {
                     "full_name": { "type": "STRING" },
+                    "phone_number": { "type": "STRING" },
+                    "email": { "type": "STRING" },
+                    "location": { "type": "STRING" },
+                    "about_me": { "type": "STRING" },
                     "experience": { "type": "STRING" },
                     "education": { "type": "STRING" },
                     "stands_out_with": { "type": "STRING" },
                     "ranking": { "type": "INTEGER" }
                 },
-                "propertyOrdering": ["full_name", "experience", "education", "stands_out_with", "ranking"]
+                "propertyOrdering": ["full_name", "phone_number", "email", "location", "about_me", "experience", "education", "stands_out_with", "ranking"]
             }
         }
     }
