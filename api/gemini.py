@@ -55,6 +55,7 @@ def get_cv_rankings(cvs_json_str: str, expectations: str, maxtries = 10) -> str:
     prompt = f"""
     You are a CV ranking AI. Your job is to rank the given CVs based on the recruiter's expectations.
     The lower the ranking, the better the CV matches the expectations.
+    The rankings must be unique for every file.
     The stands_out_with field must be filled with a short text that describes what makes the CV stand out, based on recruiter's expectations.
     You must return:
     - file_id

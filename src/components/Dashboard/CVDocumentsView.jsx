@@ -75,50 +75,55 @@ const CVDocumentsView = () => {
   };
 
   const handleGenerate = async () => {
-    const generatedProfiles = await Promise.all(
-      cvList.map(async (cv) => {
-        const formData = new FormData();
-        formData.append(
-          "file",
-          await fetch(cv.file).then((r) => r.blob()),
-          cv.filename
-        );
-        formData.append("expectations", prompt);
+    const formData = new FormData();
+    const fileIds = [];
 
-        try {
-          const res = await fetch(
-            "http://127.0.0.1:8000/process_cv?expectations=" +
-              encodeURIComponent(prompt),
-            {
-              method: "POST",
-              body: formData,
-            }
-          );
+    for (let i = 0; i < cvList.length; i++) {
+      const cv = cvList[i];
+      const blob = await fetch(cv.file).then((r) => r.blob());
+      const fileId = (i + 1).toString();
+      formData.append("files", blob, cv.filename);
+      fileIds.push(fileId);
+    }
 
-          const data = await res.json();
+    fileIds.forEach((id) => formData.append("file_ids", id));
+    formData.append("expectations", prompt);
 
-          return {
-            id: Date.now() + Math.random(),
-            name: data.full_name || cv.filename,
-            stands_out_with: data.stands_out_with,
-            experience: data.experience,
-            education: data.education,
-          };
-        } catch (error) {
-          console.error("Gemini error", error);
-          return {
-            id: Date.now() + Math.random(),
-            name: cv.filename,
-            stands_out_with: "n/a",
-            experience: "n/a",
-            education: "n/a",
-          };
+    try {
+      const res = await fetch(
+        "http://127.0.0.1:8000/process_cv?expectations=" +
+          encodeURIComponent(prompt),
+        {
+          method: "POST",
+          body: formData,
         }
-      })
-    );
+      );
 
-    setProfilesForVacancy(vacancyId, generatedProfiles);
-    alert("Profili veiksmīgi izveidoti!");
+      const data = await res.json();
+
+      // Sagatavo profilus
+      const rankedProfiles = data
+        .sort((a, b) => a.ranking - b.ranking)
+        .map((cv, index) => ({
+          id: cv.file_id,
+          name: cv.full_name,
+          experience: cv.experience,
+          education: cv.education,
+          phone_number: cv.phone_number,
+          email: cv.email,
+          location: cv.location,
+          about_me: cv.about_me,
+          stands_out_with: cv.stands_out_with,
+          ranking: cv.ranking,
+          index,
+        }));
+
+      setProfilesForVacancy(vacancyId, rankedProfiles);
+      alert("Profili veiksmīgi izveidoti!");
+    } catch (error) {
+      console.error("Kļūda ģenerēšanā:", error);
+      alert("Radās kļūda CV apstrādē.");
+    }
   };
 
   return (
