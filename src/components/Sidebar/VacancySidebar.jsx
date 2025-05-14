@@ -20,7 +20,7 @@ const VacancySidebar = ({
   onRenameStart,
 }) => {
   const location = useLocation();
-  const { vacancies, archiveVacancy, renameVacancy } = useVacancy();
+  const { vacancies, archiveVacancy, renameVacancy, getProfilesForVacancy } = useVacancy();
   const { getFavorites } = useFavorites();
   const [openSections, setOpenSections] = useState({});
   const [dropdowns, setDropdowns] = useState({});
@@ -85,7 +85,7 @@ const VacancySidebar = ({
             .map((vacancy) => {
               const isOpen = openSections[vacancy.id];
               const favCount = getFavorites(vacancy.id).length;
-              const profileCount = 3;
+              const profileCount = getProfilesForVacancy(vacancy.id).length;
 
               return (
                 <div key={vacancy.id} className="mb-4 relative">

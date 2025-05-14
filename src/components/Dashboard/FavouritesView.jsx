@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useFavorites } from '../../context/FavoritesContext';
-import { useVacancy } from '../../context/VacancyContext';
+import React, { useState } from "react";
+import { useParams } from "react-router-dom";
+import { useFavorites } from "../../context/FavoritesContext";
+import { useVacancy } from "../../context/VacancyContext";
 
 const FavouritesView = () => {
   const { vacancyId } = useParams();
@@ -9,8 +9,8 @@ const FavouritesView = () => {
   const { vacancies } = useVacancy();
 
   const favorites = getFavorites(vacancyId);
-  const currentVacancy = vacancies.find(v => v.id === vacancyId);
-  const vacancyName = currentVacancy?.title || 'Unknown Vacancy';
+  const currentVacancy = vacancies.find((v) => v.id === vacancyId);
+  const vacancyName = currentVacancy?.title || "Unknown Vacancy";
   const [previewProfile, setPreviewProfile] = useState(null);
 
   return (
@@ -63,14 +63,29 @@ const FavouritesView = () => {
                 👤
               </div>
               <p className="mt-2 font-medium">{previewProfile.name}</p>
+              <p className="text-sm text-gray-400">
+                {previewProfile.email} | {previewProfile.phone_number}
+              </p>
+              <p className="text-sm text-gray-400">{previewProfile.location}</p>
             </div>
-            <div>
-              <h3 className="font-semibold underline text-lg mb-1">Stands out with:</h3>
-              <p className="text-sm mb-3">Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info</p>
+            <div className="text-sm text-white">
+              <h3 className="font-semibold underline text-lg mb-1">
+                Stands out with:
+              </h3>
+              <p className="mb-3">{previewProfile.stands_out_with}</p>
+
+              <h3 className="font-semibold text-lg mb-1">About me</h3>
+              <p className="mb-3">{previewProfile.about_me}</p>
+
               <h3 className="font-semibold text-lg mb-1">Experience</h3>
-              <p className="text-sm mb-3">Info Info Info Info Info Info Info Info Info Info</p>
-              <h3 className="font-semibold underline text-lg mb-1">Education:</h3>
-              <p className="text-sm">Info Info Info</p>
+              <p className="mb-3 whitespace-pre-wrap">
+                {previewProfile.experience}
+              </p>
+
+              <h3 className="font-semibold underline text-lg mb-1">
+                Education:
+              </h3>
+              <p className="whitespace-pre-wrap">{previewProfile.education}</p>
             </div>
           </div>
         </div>

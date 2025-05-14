@@ -2,19 +2,31 @@ import React, { useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useVacancy } from "../../context/VacancyContext";
 import "./CVDocumentsView.css";
+import { useEffect } from "react";
 
 const CVDocumentsView = () => {
   const { vacancyId } = useParams();
-  const { vacancies } = useVacancy();
-  const vacancy = vacancies.find((v) => v.id === vacancyId);
+  const {
+    vacancies,
+    setProfilesForVacancy,
+    setCvFilesForVacancy,
+    getCvFilesForVacancy,
+  } = useVacancy();
 
+  const vacancy = vacancies.find((v) => v.id === vacancyId);
   const [cvList, setCvList] = useState([]);
   const [selectedCV, setSelectedCV] = useState(null);
   const [prompt, setPrompt] = useState("");
   const [previewURL, setPreviewURL] = useState(null);
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
-  const { setProfilesForVacancy } = useVacancy();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const updateCvList = (newList) => {
+    setCvList(newList);
+    setCvFilesForVacancy(vacancyId, newList);
+  };
 
   const smoothScroll = (direction = "right") => {
     const container = scrollRef.current;
@@ -42,7 +54,7 @@ const CVDocumentsView = () => {
 
   const removeCV = (id) => {
     const updatedList = cvList.filter((cv) => cv.id !== id);
-    setCvList(updatedList);
+    updateCvList(updatedList);
     if (selectedCV?.id === id) {
       setSelectedCV(updatedList.length > 0 ? updatedList[0] : null);
     }
@@ -70,11 +82,13 @@ const CVDocumentsView = () => {
       file: URL.createObjectURL(file),
     };
 
-    setCvList((prev) => [...prev, newCV]);
+    const updatedList = [...cvList, newCV];
+    updateCvList(updatedList);
     event.target.value = null;
   };
 
   const handleGenerate = async () => {
+    setIsLoading(true); // Start loader
     const formData = new FormData();
     const fileIds = [];
 
@@ -101,7 +115,6 @@ const CVDocumentsView = () => {
 
       const data = await res.json();
 
-      // Sagatavo profilus
       const rankedProfiles = data
         .sort((a, b) => a.ranking - b.ranking)
         .map((cv, index) => ({
@@ -119,12 +132,19 @@ const CVDocumentsView = () => {
         }));
 
       setProfilesForVacancy(vacancyId, rankedProfiles);
-      alert("Profili veiksmīgi izveidoti!");
     } catch (error) {
       console.error("Kļūda ģenerēšanā:", error);
       alert("Radās kļūda CV apstrādē.");
+    } finally {
+      setIsLoading(false); // End loader
+      setShowSuccessModal(true);
     }
   };
+
+  useEffect(() => {
+    const existingFiles = getCvFilesForVacancy(vacancyId);
+    setCvList(existingFiles);
+  }, [vacancyId, getCvFilesForVacancy]);
 
   return (
     <div className="text-white">
@@ -216,7 +236,9 @@ const CVDocumentsView = () => {
           Add
         </button>
         <button
-          onClick={() => setCvList([])}
+          onClick={() => {
+            updateCvList([]);
+          }}
           className="bg-purple-800 hover:bg-purple-700 text-white px-4 py-2 rounded"
         >
           Remove all
@@ -259,6 +281,31 @@ const CVDocumentsView = () => {
               title="CV Preview"
               className="w-full h-full"
             ></iframe>
+          </div>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center">
+          <div className="w-20 h-20 border-4 border-purple-500 border-dashed rounded-full animate-spin"></div>
+        </div>
+      )}
+
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center">
+          <div className="bg-[#1e1e2f] p-6 rounded-lg shadow-xl text-white w-[90%] max-w-md text-center">
+            <h2 className="text-xl font-semibold mb-4">
+              Profiles created successfully!
+            </h2>
+            <p className="mb-6">
+              Your candidate profiles are available in the "Profiles" section.
+            </p>
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="bg-purple-800 hover:bg-purple-700 text-white px-6 py-2 rounded"
+            >
+              OK
+            </button>
           </div>
         </div>
       )}
