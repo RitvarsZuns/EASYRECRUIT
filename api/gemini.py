@@ -57,13 +57,7 @@ def get_cv_rankings(cvs_json_str: str, expectations: str, maxtries = 10) -> str:
     The lower the ranking, the better the CV matches the expectations.
     The stands_out_with field must be filled with a short text that describes what makes the CV stand out, based on recruiter's expectations.
     You must return:
-    - full_name
-    - phone_number
-    - email
-    - location
-    - about_me
-    - experience
-    - education
+    - file_id
     - stands_out_with
     - ranking
 
@@ -81,17 +75,11 @@ def get_cv_rankings(cvs_json_str: str, expectations: str, maxtries = 10) -> str:
             "items": {
                 "type": "OBJECT",
                 "properties": {
-                    "full_name": { "type": "STRING" },
-                    "phone_number": { "type": "STRING" },
-                    "email": { "type": "STRING" },
-                    "location": { "type": "STRING" },
-                    "about_me": { "type": "STRING" },
-                    "experience": { "type": "STRING" },
-                    "education": { "type": "STRING" },
+                    "file_id": { "type": "STRING" },
                     "stands_out_with": { "type": "STRING" },
                     "ranking": { "type": "INTEGER" }
                 },
-                "propertyOrdering": ["full_name", "phone_number", "email", "location", "about_me", "experience", "education", "stands_out_with", "ranking"]
+                "propertyOrdering": ["file_id", "stands_out_with", "ranking"]
             }
         }
     }

@@ -1,7 +1,7 @@
 import json
 
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, UploadFile
 from fastapi.responses import Response
 
 from dataclasses import dataclass, asdict
@@ -24,6 +24,7 @@ load_dotenv()
 
 @dataclass
 class CV:
+    file_id: str
     full_name: str
     experience: str
     education: str
@@ -36,19 +37,30 @@ class CV:
 
 
 @app.post("/process_cv")
-async def process_cv(files: List[UploadFile], expectations: str):
+async def process_cv(
+    files: List[UploadFile],
+    file_ids: List[str],
+    expectations: str
+):
     """Process a CV files and return the extracted text."""
+    
+    # Split file id string by ',' if passed as a string not array
+    if len(file_ids) == 1:
+        file_ids = file_ids[0].split(",")
+
+    if len(files) != len(file_ids):
+        return Response(content=json.dumps({"error": "Mismatch between number of files and file_ids"}), status_code=500, media_type="application/json")
     
     processed_cvs = []
 
     # Extract CV content
-    for file in files:
+    for file, file_id in zip(files, file_ids):
         # Check file type
         if file.content_type not in ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']:
             return {"error": "Unsupported file type. Please upload a .txt, .pdf, or .docx file."}
     
         try:
-            extracted_cv = await process_cv_document(file, expectations)
+            extracted_cv = await process_cv_document(file, file_id, expectations)
             if (extracted_cv.full_name != "Not a CV" and
                 extracted_cv.experience != "Not a CV" and
                 extracted_cv.education != "Not a CV"):
@@ -62,11 +74,12 @@ async def process_cv(files: List[UploadFile], expectations: str):
     return Response(content=json.dumps(cv_list_ranked), status_code=200, media_type="application/json")
 
 
-async def process_cv_document(file: UploadFile, expectations: str) -> CV:
+async def process_cv_document(file: UploadFile, file_id: str, expectations: str) -> CV:
     """Extract text from a CV document
     
     Args:
         file (UploadFile): The CV file to process.
+        file_id (str): The ID of the CV file.
         expectations (str): The expectations for the CV.
     Returns:
         dict: The extracted content from the CV."""
@@ -79,6 +92,7 @@ async def process_cv_document(file: UploadFile, expectations: str) -> CV:
     extracted_content_json = json.loads(extracted_content.strip("'"))[0]
 
     return CV(
+            file_id = file_id,
             full_name = extracted_content_json.get("full_name", "n/a"),
             phone_number = extracted_content_json.get("phone_number", "n/a"),
             email = extracted_content_json.get("email", "n/a"),
@@ -106,4 +120,12 @@ async def rank_cvs(cvs: dict[CV], expectations: str) -> dict:
 
     ranked_cvs = get_cv_rankings(cvs_json_str, expectations, maxtries=10)
 
-    return json.loads(ranked_cvs)
+    for ranked_cv in json.loads(ranked_cvs):
+        for cv in cvs:
+            if cv.file_id == ranked_cv["file_id"]:
+                cv.stands_out_with = ranked_cv["stands_out_with"]
+                cv.ranking = ranked_cv["ranking"]
+
+    ranked_cv_dicts = [asdict(cv) for cv in cvs]
+
+    return ranked_cv_dicts
