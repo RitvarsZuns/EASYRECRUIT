@@ -57,7 +57,7 @@ async def process_cv(
     for file, file_id in zip(files, file_ids):
         # Check file type
         if file.content_type not in ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']:
-            return {"error": "Unsupported file type. Please upload a .txt, .pdf, or .docx file."}
+            return Response(content=json.dumps({"error": f"Unsupported file type for file {file.filename}. Please upload .txt, .pdf, or .docx files"}), status_code=500, media_type="application/json")
     
         try:
             extracted_cv = await process_cv_document(file, file_id, expectations)
