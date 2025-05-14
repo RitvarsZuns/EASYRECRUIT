@@ -18,10 +18,13 @@ def extract_cv_text(cv_text: str, maxtries = 10) -> str:
     - email
     - location
     - about_me
-    - experience
-    - education
+    - experience (format: [year] | [position] | [company]\n[description])
+    - education (format: [degree] | [institution] | [year])
 
+    For experience and education, start each record with a '•', remove any multiple new lines within one record.
+    For experience, split each record with 2 new lines. For education, split each record with a new line.
     If the provided text is not a CV, return "Not a CV" for all required fields.
+    Remove any unnecessary spaces or new lines from raw text.
 
     Full CV text:
     {cv_text}
