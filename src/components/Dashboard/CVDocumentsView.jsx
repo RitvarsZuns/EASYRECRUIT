@@ -11,6 +11,8 @@ const CVDocumentsView = () => {
     setProfilesForVacancy,
     setCvFilesForVacancy,
     getCvFilesForVacancy,
+    addPromptForVacancy,
+    getPromptsForVacancy,
   } = useVacancy();
 
   const vacancy = vacancies.find((v) => v.id === vacancyId);
@@ -22,6 +24,7 @@ const CVDocumentsView = () => {
   const fileInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [promptHistory, setPromptHistory] = useState([]);
 
   const updateCvList = (newList) => {
     setCvList(newList);
@@ -139,12 +142,19 @@ const CVDocumentsView = () => {
       setIsLoading(false); // End loader
       setShowSuccessModal(true);
     }
+
+    await addPromptForVacancy(vacancyId, prompt);
+    setPromptHistory((prev) => [...prev, prompt]); // lokāli atjauno
+    setPrompt(""); // iztīra input lauku
   };
 
   useEffect(() => {
     const existingFiles = getCvFilesForVacancy(vacancyId);
     setCvList(existingFiles);
-  }, [vacancyId, getCvFilesForVacancy]);
+
+    const history = getPromptsForVacancy(vacancyId);
+    setPromptHistory(history);
+  }, [vacancyId, getCvFilesForVacancy, getPromptsForVacancy]);
 
   return (
     <div className="text-white">
@@ -246,8 +256,16 @@ const CVDocumentsView = () => {
       </div>
 
       <div className="bg-[#1e1e2f] p-4 rounded space-y-4">
-        <div className="min-h-[80px]">
-          <p className="text-sm">{prompt || "No prompt submitted yet."}</p>
+        <div className="min-h-[80px] space-y-2">
+          {promptHistory.length === 0 ? (
+            <p className="text-sm text-gray-400">No prompt submitted yet.</p>
+          ) : (
+            promptHistory.map((p, i) => (
+              <p key={i} className="text-sm text-white">
+                {p}
+              </p>
+            ))
+          )}
         </div>
 
         <div className="flex items-center">
@@ -255,7 +273,9 @@ const CVDocumentsView = () => {
             type="text"
             placeholder="Input what you expect from a candidate"
             value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
+            onChange={(e) => {
+              setPrompt(e.target.value);
+            }}
             className="flex-1 bg-gray-800 text-white p-2 rounded mr-4"
           />
           <button

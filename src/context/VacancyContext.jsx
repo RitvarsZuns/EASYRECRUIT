@@ -10,6 +10,9 @@ export const VacancyProvider = ({ children }) => {
   const navigate = useNavigate();
   const [cvResultsByVacancy, setCvResultsByVacancy] = useState({});
   const [cvFilesByVacancy, setCvFilesByVacancy] = useState({});
+  const [promptHistoryByVacancy, setPromptHistoryByVacancy] = useState({});
+
+
 
   const addVacancy = (name) => {
     const slug = name.toLowerCase().replace(/\s+/g, "-");
@@ -81,6 +84,19 @@ export const VacancyProvider = ({ children }) => {
     return cvFilesByVacancy[vacancyId] || [];
   };
 
+  const addPromptForVacancy = (vacancyId, promptText) => {
+  setPromptHistoryByVacancy((prev) => ({
+    ...prev,
+    [vacancyId]: [...(prev[vacancyId] || []), promptText],
+  }));
+};
+
+const getPromptsForVacancy = (vacancyId) => {
+  return promptHistoryByVacancy[vacancyId] || [];
+};
+
+
+
   return (
     <VacancyContext.Provider
       value={{
@@ -99,6 +115,8 @@ export const VacancyProvider = ({ children }) => {
         cvFilesByVacancy,
         setCvFilesForVacancy,
         getCvFilesForVacancy,
+        addPromptForVacancy,
+        getPromptsForVacancy,
       }}
     >
       {children}
