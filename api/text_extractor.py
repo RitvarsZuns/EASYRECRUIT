@@ -1,5 +1,6 @@
 import PyPDF2
-import docx
+import tempfile
+import docx2txt
 import io
 
 def get_text_from_file(file_content, file_type) -> str:
@@ -23,10 +24,10 @@ def get_text_from_file(file_content, file_type) -> str:
         return text
     elif file_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
         file_stream = io.BytesIO(file_content)
-        doc = docx.Document(file_stream)
-        text = ''
-        for para in doc.paragraphs:
-            text += para.text + '\n'
+        with tempfile.NamedTemporaryFile(delete=True, suffix=".docx") as tmp:
+            tmp.write(file_stream.read())
+            tmp.flush()
+            text = docx2txt.process(tmp.name)
         return text
     else:
         raise ValueError("Unsupported file type (not .txt, .pdf, or .docx)")
