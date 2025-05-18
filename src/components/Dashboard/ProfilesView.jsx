@@ -1,17 +1,11 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useFavorites } from '../../context/FavoritesContext';
-import { useVacancy } from '../../context/VacancyContext';
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+import React, { useState } from "react";
+import { useParams } from "react-router-dom";
+import { useFavorites } from "../../context/FavoritesContext";
+import { useVacancy } from "../../context/VacancyContext";
+import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
-const mockProfiles = [
-  { id: 1, name: 'Peteris Sirmais' },
-  { id: 2, name: 'Janis Jaunais' },
-  { id: 3, name: 'Hanna Vanna' },
-];
-
-const type = 'PROFILE';
+const type = "PROFILE";
 
 const DraggableProfile = ({ profile, index, moveProfile, vacancyId, onPreview }) => {
   const { toggleFavorite, isFavorite } = useFavorites();
@@ -27,10 +21,14 @@ const DraggableProfile = ({ profile, index, moveProfile, vacancyId, onPreview })
   });
 
   return (
-    <div ref={(node) => ref(drop(node))} className="bg-[#1e1e2f] p-4 rounded flex items-center justify-between cursor-move">
+    <div
+      ref={(node) => ref(drop(node))}
+      className="bg-[#1e1e2f] p-4 rounded flex items-center justify-between cursor-move"
+    >
       <div className="flex items-center space-x-4">
         <span className="text-gray-400 w-4">{index + 1}.</span>
         <span>{profile.name}</span>
+        <span className="text-xs text-gray-400 ml-2">(Rank: {profile.ranking})</span>
       </div>
       <div className="flex items-center space-x-4">
         <button
@@ -41,7 +39,11 @@ const DraggableProfile = ({ profile, index, moveProfile, vacancyId, onPreview })
         </button>
         <button
           onClick={() => toggleFavorite(vacancyId, profile)}
-          className={`text-xl transition-colors ${isFavorite(vacancyId, profile.id) ? 'text-yellow-400' : 'text-white opacity-30'}`}
+          className={`text-xl transition-colors ${
+            isFavorite(vacancyId, profile.id)
+              ? "text-yellow-400"
+              : "text-white opacity-30"
+          }`}
           title="Toggle favorite"
         >
           ★
@@ -53,10 +55,15 @@ const DraggableProfile = ({ profile, index, moveProfile, vacancyId, onPreview })
 
 const ProfilesView = () => {
   const { vacancyId } = useParams();
-  const { vacancies } = useVacancy();
+  const { vacancies, getProfilesForVacancy } = useVacancy();
   const vacancy = vacancies.find((v) => v.id === vacancyId);
   const vacancyTitle = vacancy?.title || vacancyId;
-  const [profiles, setProfiles] = useState(mockProfiles);
+
+  const initialProfiles = [...getProfilesForVacancy(vacancyId)].sort(
+    (a, b) => a.ranking - b.ranking
+  );
+
+  const [profiles, setProfiles] = useState(initialProfiles);
   const [previewProfile, setPreviewProfile] = useState(null);
 
   const moveProfile = (from, to) => {
@@ -69,19 +76,25 @@ const ProfilesView = () => {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="text-white">
-        <h1 className="text-2xl font-bold mb-6 text-center">{vacancyTitle} - Profiles</h1>
-        <div className="space-y-4">
-          {profiles.map((profile, index) => (
-            <DraggableProfile
-              key={profile.id}
-              profile={profile}
-              index={index}
-              moveProfile={moveProfile}
-              vacancyId={vacancyId}
-              onPreview={setPreviewProfile}
-            />
-          ))}
-        </div>
+        <h1 className="text-2xl font-bold mb-6 text-center">
+          {vacancyTitle} - Profiles
+        </h1>
+        {profiles.length === 0 ? (
+          <p className="text-center text-gray-500">No profiles generated yet.</p>
+        ) : (
+          <div className="space-y-4">
+            {profiles.map((profile, index) => (
+              <DraggableProfile
+                key={profile.id}
+                profile={profile}
+                index={index}
+                moveProfile={moveProfile}
+                vacancyId={vacancyId}
+                onPreview={setPreviewProfile}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {previewProfile && (
@@ -98,14 +111,25 @@ const ProfilesView = () => {
                 👤
               </div>
               <p className="mt-2 font-medium">{previewProfile.name}</p>
+              <p className="text-sm text-gray-400">
+                {previewProfile.email} | {previewProfile.phone_number}
+              </p>
+              <p className="text-sm text-gray-400">{previewProfile.location}</p>
             </div>
-            <div>
-              <h3 className="font-semibold underline text-lg mb-1">Stands out with:</h3>
-              <p className="text-sm mb-3">Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info Info</p>
+            <div className="text-sm text-white">
+              <h3 className="font-semibold underline text-lg mb-1">
+                Stands out with:
+              </h3>
+              <p className="mb-3">{previewProfile.stands_out_with}</p>
+
+              <h3 className="font-semibold text-lg mb-1">About me</h3>
+              <p className="mb-3">{previewProfile.about_me}</p>
+
               <h3 className="font-semibold text-lg mb-1">Experience</h3>
-              <p className="text-sm mb-3">Info Info Info Info Info Info Info Info Info Info</p>
+              <p className="mb-3 whitespace-pre-wrap">{previewProfile.experience}</p>
+
               <h3 className="font-semibold underline text-lg mb-1">Education:</h3>
-              <p className="text-sm">Info Info Info</p>
+              <p className="whitespace-pre-wrap">{previewProfile.education}</p>
             </div>
           </div>
         </div>

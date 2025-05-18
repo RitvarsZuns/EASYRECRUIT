@@ -2,18 +2,34 @@ import React, { useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useVacancy } from "../../context/VacancyContext";
 import "./CVDocumentsView.css";
+import { useEffect } from "react";
 
 const CVDocumentsView = () => {
   const { vacancyId } = useParams();
-  const { vacancies } = useVacancy();
-  const vacancy = vacancies.find((v) => v.id === vacancyId);
+  const {
+    vacancies,
+    setProfilesForVacancy,
+    setCvFilesForVacancy,
+    getCvFilesForVacancy,
+    addPromptForVacancy,
+    getPromptsForVacancy,
+  } = useVacancy();
 
+  const vacancy = vacancies.find((v) => v.id === vacancyId);
   const [cvList, setCvList] = useState([]);
   const [selectedCV, setSelectedCV] = useState(null);
   const [prompt, setPrompt] = useState("");
   const [previewURL, setPreviewURL] = useState(null);
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [promptHistory, setPromptHistory] = useState([]);
+
+  const updateCvList = (newList) => {
+    setCvList(newList);
+    setCvFilesForVacancy(vacancyId, newList);
+  };
 
   const smoothScroll = (direction = "right") => {
     const container = scrollRef.current;
@@ -41,7 +57,7 @@ const CVDocumentsView = () => {
 
   const removeCV = (id) => {
     const updatedList = cvList.filter((cv) => cv.id !== id);
-    setCvList(updatedList);
+    updateCvList(updatedList);
     if (selectedCV?.id === id) {
       setSelectedCV(updatedList.length > 0 ? updatedList[0] : null);
     }
@@ -69,9 +85,76 @@ const CVDocumentsView = () => {
       file: URL.createObjectURL(file),
     };
 
-    setCvList((prev) => [...prev, newCV]);
+    const updatedList = [...cvList, newCV];
+    updateCvList(updatedList);
     event.target.value = null;
   };
+
+  const handleGenerate = async () => {
+    setIsLoading(true); // Start loader
+    const formData = new FormData();
+    const fileIds = [];
+
+    for (let i = 0; i < cvList.length; i++) {
+      const cv = cvList[i];
+      const blob = await fetch(cv.file).then((r) => r.blob());
+      const fileId = (i + 1).toString();
+      formData.append("files", blob, cv.filename);
+      fileIds.push(fileId);
+    }
+
+    fileIds.forEach((id) => formData.append("file_ids", id));
+    formData.append("expectations", prompt);
+
+    try {
+      const res = await fetch(
+        "http://127.0.0.1:8000/process_cv?expectations=" +
+          encodeURIComponent(prompt),
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+
+      const rankedProfiles = data
+        .sort((a, b) => a.ranking - b.ranking)
+        .map((cv, index) => ({
+          id: cv.file_id,
+          name: cv.full_name,
+          experience: cv.experience,
+          education: cv.education,
+          phone_number: cv.phone_number,
+          email: cv.email,
+          location: cv.location,
+          about_me: cv.about_me,
+          stands_out_with: cv.stands_out_with,
+          ranking: cv.ranking,
+          index,
+        }));
+
+      setProfilesForVacancy(vacancyId, rankedProfiles);
+    } catch (error) {
+      console.error("Kļūda ģenerēšanā:", error);
+      alert("Radās kļūda CV apstrādē.");
+    } finally {
+      setIsLoading(false); // End loader
+      setShowSuccessModal(true);
+    }
+
+    await addPromptForVacancy(vacancyId, prompt);
+    setPromptHistory((prev) => [...prev, prompt]); // lokāli atjauno
+    setPrompt(""); // iztīra input lauku
+  };
+
+  useEffect(() => {
+    const existingFiles = getCvFilesForVacancy(vacancyId);
+    setCvList(existingFiles);
+
+    const history = getPromptsForVacancy(vacancyId);
+    setPromptHistory(history);
+  }, [vacancyId, getCvFilesForVacancy, getPromptsForVacancy]);
 
   return (
     <div className="text-white">
@@ -85,7 +168,11 @@ const CVDocumentsView = () => {
             onClick={scrollLeft}
             className="absolute left-[-40px] top-1/2 -translate-y-1/2 z-20 text-white text-3xl hover:text-purple-400 bg-transparent border-none shadow-none outline-none"
           >
-            <img src="/left-arrow.png" alt="Scroll left" className="w-10 h-10" />
+            <img
+              src="/left-arrow.png"
+              alt="Scroll left"
+              className="w-10 h-10"
+            />
           </button>
 
           <div
@@ -93,10 +180,15 @@ const CVDocumentsView = () => {
             className="flex items-center space-x-4 overflow-x-auto hide-scrollbar w-full mx-auto"
           >
             {cvList.length === 0 ? (
-              <div className="w-full text-center text-gray-400">No CVs to show</div>
+              <div className="w-full text-center text-gray-400">
+                No CVs to show
+              </div>
             ) : (
               cvList.map((cv) => (
-                <div key={cv.id} className="relative flex flex-col items-center space-y-2">
+                <div
+                  key={cv.id}
+                  className="relative flex flex-col items-center space-y-2"
+                >
                   <button
                     onClick={() => removeCV(cv.id)}
                     className="absolute -top-0 -right-0 bg-white text-black rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-gray-300 z-30"
@@ -111,7 +203,11 @@ const CVDocumentsView = () => {
                       selectedCV?.id === cv.id ? "bg-purple-700" : "bg-gray-800"
                     } hover:bg-purple-600`}
                   >
-                    <img src="/pdf-logo.png" alt="PDF preview" className="w-15 h-15" />
+                    <img
+                      src="/pdf-logo.png"
+                      alt="PDF preview"
+                      className="w-15 h-15"
+                    />
                   </div>
 
                   <span className="text-xs text-center max-w-[80px] truncate">
@@ -126,7 +222,11 @@ const CVDocumentsView = () => {
             onClick={scrollRight}
             className="absolute right-[-40px] top-1/2 -translate-y-1/2 z-20 text-white text-3xl hover:text-purple-400 bg-transparent border-none shadow-none outline-none"
           >
-            <img src="/right-arrow.png" alt="Scroll right" className="w-10 h-10" />
+            <img
+              src="/right-arrow.png"
+              alt="Scroll right"
+              className="w-10 h-10"
+            />
           </button>
         </div>
       </div>
@@ -146,7 +246,9 @@ const CVDocumentsView = () => {
           Add
         </button>
         <button
-          onClick={() => setCvList([])}
+          onClick={() => {
+            updateCvList([]);
+          }}
           className="bg-purple-800 hover:bg-purple-700 text-white px-4 py-2 rounded"
         >
           Remove all
@@ -154,8 +256,16 @@ const CVDocumentsView = () => {
       </div>
 
       <div className="bg-[#1e1e2f] p-4 rounded space-y-4">
-        <div className="min-h-[80px]">
-          <p className="text-sm">{prompt || "No prompt submitted yet."}</p>
+        <div className="min-h-[80px] space-y-2">
+          {promptHistory.length === 0 ? (
+            <p className="text-sm text-gray-400">No prompt submitted yet.</p>
+          ) : (
+            promptHistory.map((p, i) => (
+              <p key={i} className="text-sm text-white">
+                {p}
+              </p>
+            ))
+          )}
         </div>
 
         <div className="flex items-center">
@@ -163,10 +273,15 @@ const CVDocumentsView = () => {
             type="text"
             placeholder="Input what you expect from a candidate"
             value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
+            onChange={(e) => {
+              setPrompt(e.target.value);
+            }}
             className="flex-1 bg-gray-800 text-white p-2 rounded mr-4"
           />
-          <button className="bg-purple-800 hover:bg-purple-700 text-white px-4 py-2 rounded">
+          <button
+            onClick={handleGenerate}
+            className="bg-purple-800 hover:bg-purple-700 text-white px-4 py-2 rounded"
+          >
             Generate
           </button>
         </div>
@@ -186,6 +301,31 @@ const CVDocumentsView = () => {
               title="CV Preview"
               className="w-full h-full"
             ></iframe>
+          </div>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center">
+          <div className="w-20 h-20 border-4 border-purple-500 border-dashed rounded-full animate-spin"></div>
+        </div>
+      )}
+
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center">
+          <div className="bg-[#1e1e2f] p-6 rounded-lg shadow-xl text-white w-[90%] max-w-md text-center">
+            <h2 className="text-xl font-semibold mb-4">
+              Profiles created successfully!
+            </h2>
+            <p className="mb-6">
+              Your candidate profiles are available in the "Profiles" section.
+            </p>
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="bg-purple-800 hover:bg-purple-700 text-white px-6 py-2 rounded"
+            >
+              OK
+            </button>
           </div>
         </div>
       )}
